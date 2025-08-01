@@ -82,6 +82,40 @@ spring:
 #      hibernate.search.backend.analysis.configurer: ca.uhn.fhir.jpa.search.HapiHSearchAnalysisConfigurers$HapiElasticAnalysisConfigurer
 hapi:
   fhir:
+    # Partition-specific configurations
+    partitions:
+      enabled: true
+      require-partition-header: true
+      datasources:
+        partition1:
+          url: jdbc:postgresql://localhost:5432/fhir_partition1
+          username: fhir_user
+          password: fhir_password
+          driver-class-name: org.postgresql.Driver
+          maximum-pool-size: 10
+          minimum-idle: 5
+          idle-timeout: 300000
+        
+        partition2:
+          url: jdbc:postgresql://localhost:5432/fhir_partition2
+          username: fhir_user
+          password: fhir_password
+          driver-class-name: org.postgresql.Driver
+          maximum-pool-size: 10
+          minimum-idle: 5
+          idle-timeout: 300000
+      # Example usage documentation
+      # To use partitioned data sources:
+      # 1. Enable partitioning in the configuration above
+      # 2. Configure each partition's database connection details
+      # 3. Include X-Partition header in requests with the partition name
+      # 
+      # Example curl:
+      # curl -H "X-Partition: partition1" http://localhost:8080/fhir/Patient
+      #
+      # Error responses:
+      # - 400 Bad Request: Missing X-Partition header when required
+      # - 404 Not Found: Invalid partition specified
     ### This flag when enabled to true, will avail evaluate measure operations from CR Module.
     ### Flag is false by default, can be passed as command line argument to override.
     cr:
