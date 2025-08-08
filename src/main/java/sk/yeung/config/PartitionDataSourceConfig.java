@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "partition.datasource")
+@ConfigurationProperties(prefix = "hapi.fhir.partitions.datasources.partition1")
 public class PartitionDataSourceConfig {
     private String url;
     private String username;
