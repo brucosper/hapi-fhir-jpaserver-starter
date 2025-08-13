@@ -1,6 +1,9 @@
 package ca.uhn.fhir.jpa.starter.common;
 
 import ca.uhn.fhir.batch2.config.Batch2JobRegisterer;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import java.util.Properties;
 import ca.uhn.fhir.batch2.jobs.export.BulkDataExportProvider;
 import ca.uhn.fhir.batch2.jobs.imprt.BulkDataImportProvider;
 import ca.uhn.fhir.batch2.jobs.reindex.ReindexProvider;
@@ -151,7 +154,8 @@ public class StarterJpaConfig {
 			DataSource myDataSource,
 			ConfigurableListableBeanFactory myConfigurableListableBeanFactory,
 			FhirContext theFhirContext,
-			JpaStorageSettings theStorageSettings) {
+			JpaStorageSettings theStorageSettings,
+			MultiTenantConnectionProvider multiTenantConnectionProvider) {
 		LocalContainerEntityManagerFactoryBean retVal = HapiEntityManagerFactoryUtil.newEntityManagerFactory(
 				myConfigurableListableBeanFactory, theFhirContext, theStorageSettings);
 		retVal.setPersistenceUnitName("HAPI_PU");
@@ -161,8 +165,26 @@ public class StarterJpaConfig {
 		} catch (Exception e) {
 			throw new ConfigurationException("Could not set the data source due to a configuration issue", e);
 		}
-		retVal.setJpaProperties(
-				EnvironmentHelper.getHibernateProperties(configurableEnvironment, myConfigurableListableBeanFactory));
+
+		Properties jpaProperties = EnvironmentHelper.getHibernateProperties(configurableEnvironment, myConfigurableListableBeanFactory);
+		
+		// Configure multi-tenancy
+		jpaProperties.put("hibernate.multiTenancy", "DATABASE");
+		jpaProperties.put("hibernate.multi_tenant_connection_provider", multiTenantConnectionProvider);
+		jpaProperties.put("hibernate.tenant_identifier_resolver", new CurrentTenantIdentifierResolver() {
+			@Override
+			public String resolveCurrentTenantIdentifier() {
+				String tenantId = TenantContext.getTenantId();
+				return tenantId != null ? tenantId : "default";
+			}
+
+			@Override
+			public boolean validateExistingCurrentSessions() {
+				return true;
+			}
+		});
+
+		retVal.setJpaProperties(jpaProperties);
 		return retVal;
 	}
 
@@ -261,6 +283,7 @@ public class StarterJpaConfig {
 
 	@Bean
 	public RestfulServer restfulServer(
+			TenantIdentificationInterceptor tenantIdentificationInterceptor,
 			IFhirSystemDao<?, ?> fhirSystemDao,
 			AppProperties appProperties,
 			DaoRegistry daoRegistry,
@@ -353,6 +376,7 @@ public class StarterJpaConfig {
 		}
 
 		fhirServer.registerInterceptor(loggingInterceptor);
+		fhirServer.registerInterceptor(tenantIdentificationInterceptor);
 
 		implementationGuideOperationProvider.ifPresent(fhirServer::registerProvider);
 
