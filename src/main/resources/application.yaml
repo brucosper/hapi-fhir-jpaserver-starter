@@ -43,11 +43,11 @@ spring:
     baselineOnMigrate: true
     fail-on-missing-locations: false
   datasource:
-    #url: 'jdbc:h2:file:./target/database/h2'
-    url: jdbc:h2:mem:test_mem
-    username: sa
-    password: null
-    driverClassName: org.h2.Driver
+    # Main datasource now uses canada PostgreSQL database for system operations
+    url: jdbc:postgresql://localhost:5432/fhir_canada
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
     max-active: 15
 
     # database connection pool size
@@ -61,13 +61,14 @@ spring:
       #Hibernate dialect is automatically detected except Postgres and H2.
       #If using H2, then supply the value of ca.uhn.fhir.jpa.model.dialect.HapiFhirH2Dialect
       #If using postgres, then supply the value of ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
-      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirH2Dialect
-  #      hibernate.hbm2ddl.auto: update
-  #      hibernate.jdbc.batch_size: 20
-  #      hibernate.cache.use_query_cache: false
-  #      hibernate.cache.use_second_level_cache: false
-  #      hibernate.cache.use_structured_entries: false
-  #      hibernate.cache.use_minimal_puts: false
+      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      # Enable automatic schema creation/update
+      hibernate.hbm2ddl.auto: update
+      hibernate.jdbc.batch_size: 20
+      hibernate.cache.use_query_cache: false
+      hibernate.cache.use_second_level_cache: false
+      hibernate.cache.use_structured_entries: false
+      hibernate.cache.use_minimal_puts: false
 
   ###    These settings will enable fulltext search with lucene or elastic
       hibernate.search.enabled: false
@@ -257,11 +258,11 @@ hapi:
       request_tenant_partitioning_mode: true
 
     tenants:
-      tenant1:
+      canada:
         url: jdbc:postgresql://localhost:5432/fhir_canada
         username: postgres 
         password: postgres 
-      tenant2:
+      netherlands:
         url: jdbc:postgresql://localhost:5432/fhir_netherlands
         username: postgres
         password: postgres

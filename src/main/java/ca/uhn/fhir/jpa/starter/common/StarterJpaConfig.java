@@ -175,7 +175,8 @@ public class StarterJpaConfig {
 			@Override
 			public String resolveCurrentTenantIdentifier() {
 				String tenantId = TenantContext.getTenantId();
-				return tenantId != null ? tenantId : "default";
+				// Use canada as default for system operations and startup
+				return tenantId != null ? tenantId : "canada";
 			}
 
 			@Override

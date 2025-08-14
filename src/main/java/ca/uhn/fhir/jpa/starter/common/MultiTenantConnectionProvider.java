@@ -17,10 +17,15 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
 
     @Override
     protected DataSource selectAnyDataSource() {
-        // Return the first available datasource for schema validation
+        // Return canada datasource for schema validation and system operations
         Set<String> tenantIds = tenantDataSourceRegistry.getTenantIds();
         if (tenantIds.isEmpty()) {
-            throw new IllegalStateException("No tenant datasources available");
+            throw new IllegalStateException("No tenant datasources available. Please check application.yaml configuration.");
+        }
+        
+        // Prefer canada for system operations, fallback to first available
+        if (tenantDataSourceRegistry.hasTenant("canada")) {
+            return tenantDataSourceRegistry.getDataSource("canada");
         }
         return tenantDataSourceRegistry.getDataSource(tenantIds.iterator().next());
     }
@@ -28,18 +33,17 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
     @Override
     protected DataSource selectDataSource(Object tenantIdentifier) {
         if (tenantIdentifier == null) {
-            throw new IllegalArgumentException("Tenant identifier cannot be null");
+            // During startup or system operations, use canada as default
+            tenantIdentifier = "canada";
         }
 
-        String currentTenant = TenantContext.getTenantId();
-        if (currentTenant == null || currentTenant.trim().isEmpty()) {
-            throw new IllegalStateException("No tenant specified for current request");
+        String tenantId = tenantIdentifier.toString();
+        
+        // Validate tenant exists
+        if (!tenantDataSourceRegistry.hasTenant(tenantId)) {
+            throw new IllegalArgumentException("Invalid tenant identifier: " + tenantId + ". Available tenants: " + tenantDataSourceRegistry.getTenantIds());
         }
 
-        if (!tenantDataSourceRegistry.hasTenant(currentTenant)) {
-            throw new IllegalArgumentException("Invalid tenant identifier: " + currentTenant);
-        }
-
-        return tenantDataSourceRegistry.getDataSource(currentTenant);
+        return tenantDataSourceRegistry.getDataSource(tenantId);
     }
 }

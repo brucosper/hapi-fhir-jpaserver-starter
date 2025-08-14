@@ -5,6 +5,9 @@ import ca.uhn.fhir.interceptor.api.Interceptor;
 import ca.uhn.fhir.interceptor.api.Pointcut;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +21,7 @@ public class TenantIdentificationInterceptor {
     private TenantProperties tenantProperties;
 
     @Hook(Pointcut.SERVER_INCOMING_REQUEST_PRE_PROCESSED)
-    public void preProcess(RequestDetails requestDetails) {
+    public void preProcess(HttpServletRequest requestDetails, HttpServletResponse responseDetails) {
         String tenantId = requestDetails.getHeader(X_PARTITION_NAME);
         
         if (tenantId == null || tenantId.trim().isEmpty()) {
