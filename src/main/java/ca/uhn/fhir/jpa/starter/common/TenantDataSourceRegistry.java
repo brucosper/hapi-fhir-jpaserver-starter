@@ -31,9 +31,7 @@ public class TenantDataSourceRegistry {
             hikariConfig.setMaximumPoolSize(10);
             hikariConfig.setMinimumIdle(2);
             
-            System.err.println(config.getUrl());
             DataSource dataSource = new HikariDataSource(hikariConfig);
-            System.err.println(config.getUrl());
             tenantDataSources.put(tenantId, dataSource);
         });
 

@@ -35,7 +35,6 @@ public class TenantIdentificationInterceptor {
         if (!tenantProperties.getTenants().containsKey(tenantId)) {
             throw new InvalidRequestException("Invalid tenant ID: " + tenantId);
         }
-        System.err.println("Setting tenant ID to: " + tenantId);
         TenantContext.setTenantId(tenantId);
         String partitionName = requestDetails.getHeader("X-Partition-Name");
 
